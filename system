@@ -1,0 +1,609 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+struct Student
+{
+    int studentID;
+    string name;
+    float GPA;
+    string courses[5];
+    Student *next;
+
+    Student(int id, const string &studentName, float gpa, Student *nextStudent)
+        : studentID(id), name(studentName), GPA(gpa), next(nextStudent) {}
+};
+struct Teacher
+{
+    int TeacherID;
+    string Teachername;
+    string course;
+    float assignedGPA;
+    Teacher *next;
+
+    Teacher(int id, const string &teacherName, const string &teacherCourse, float assignedGpa, Teacher *nextTeacher)
+        : TeacherID(id), Teachername(teacherName), course(teacherCourse), assignedGPA(assignedGpa), next(nextTeacher) {}
+};
+
+class StudentInformationSystem
+{
+private:
+    Student *studentHead;
+    Teacher *teacherHead;
+
+public:
+    StudentInformationSystem() : studentHead(nullptr), teacherHead(nullptr) {}
+
+    void createStudentRecord(int id, string name, float GPA)
+    {
+        Student *newStudent = new Student(id, name, GPA, nullptr);
+        if (studentHead == nullptr)
+
+        {
+            studentHead = newStudent;
+        }
+        else
+        {
+            newStudent->next = studentHead;
+            studentHead = newStudent;
+        }
+    }
+    void displayStudentRecords()
+    {
+        cout << "\n---------------------------\n";
+        cout << "|      Students Details    |\n";
+        cout << "---------------------------\n\n";
+
+        Student *current = studentHead;
+
+        cout << "\n-----------------------------------\n";
+
+        while (current != nullptr)
+        {
+            cout << "| ID: " << setw(3) << current->studentID << " | Name: " << setw(3) << current->name << " | GPA: " << setw(3) << fixed << setprecision(2) << current->GPA << " | Courses: ";
+
+            for (int i = 0; i < 5; ++i)
+            {
+                if (!current->courses[i].empty())
+                {
+                    cout << current->courses[i] << " , ";
+                }
+            }
+
+            cout << "\n";
+            current = current->next;
+        }
+
+        cout << "-----------------------------------\n\n";
+    }
+
+    void createTeacherRecord(int id, string name, string course)
+    {
+        Teacher *newTeacher = new Teacher(id, name, course, 0.0, nullptr);
+        if (teacherHead == nullptr)
+        {
+            teacherHead = newTeacher;
+        }
+        else
+        {
+            newTeacher->next = teacherHead;
+            teacherHead = newTeacher;
+        }
+
+        saveTeacherRecordsToFile("teacher_records.txt");
+    }
+
+    void saveStudentRecordsToFile(const string &filename)
+    {
+        ofstream outFile(filename);
+        if (!outFile.is_open())
+        {
+            cout << "Error: Unable to open the file.\n";
+            return;
+        }
+
+        outFile << left << setw(15) << "StudentID" << setw(25) << "Name" << setw(10) << "GPA" << setw(30) << "Courses" << '\n';
+        outFile << setfill('-') << setw(80) << "" << setfill(' ') << '\n';
+
+        Student *current = studentHead;
+        while (current != nullptr)
+        {
+            outFile << left << setw(15) << current->studentID << setw(25) << current->name << setw(10) << fixed << setprecision(2) << current->GPA;
+
+            // Output courses with proper indentation
+            for (int i = 0; i < 5; ++i)
+            {
+                if (!current->courses[i].empty())
+                {
+                    // Indentation for the first course
+                    if (i == 0)
+                        outFile << setw(15) << current->courses[i];
+                    else
+                        outFile << " " << current->courses[i];
+                }
+            }
+
+            outFile << '\n';
+            current = current->next;
+        }
+        outFile.close();
+        cout << "\n\t---------------------------------";
+        cout << "| Student record saved to '" << filename << "'|";
+        cout << "\t---------------------------------\n\n";
+    }
+
+    void saveTeacherRecordsToFile(const string &filename)
+    {
+        ofstream outFile(filename);
+        if (!outFile.is_open())
+        {
+            cout << "Error: Unable to open the file.\n";
+            return;
+        }
+
+        outFile << left << setw(15) << "TeacherID" << setw(25) << "TeacherName" << setw(15) << "Course" << '\n';
+        outFile << setfill('-') << setw(55) << "" << setfill(' ') << '\n';
+
+        Teacher *current = teacherHead;
+        while (current != nullptr)
+        {
+            outFile << left << setw(15) << current->TeacherID << setw(25) << current->Teachername << setw(15) << current->course << '\n';
+            current = current->next;
+        }
+        outFile.close();
+
+        cout << "\n\t---------------------------------";
+        cout << "| Teacher record saved to '" << filename << "'|";
+        cout << "\t---------------------------------\n\n";
+    }
+
+    void updateStudentRecord(int id, const string &newName, float newGPA)
+    {
+        Student *current = studentHead;
+        while (current != nullptr && current->studentID != id)
+        {
+            current = current->next;
+        }
+
+        if (current != nullptr)
+        {
+            current->name = newName;
+            current->GPA = newGPA;
+            cout << "\n\t------------------------------------";
+            cout << "| Student Record Updated Successfully! |";
+            cout << "\t------------------------------------\n\n";
+        }
+        else
+        {
+            cout << "Student record not found.\n";
+        }
+    }
+
+    void deleteStudentRecord(int id)
+    {
+        Student *current = studentHead;
+        Student *prev = nullptr;
+
+        while (current->studentID != id)
+        {
+            prev = current;
+            current = current->next;
+        }
+
+        if (current != nullptr)
+        {
+            if (prev != nullptr)
+            {
+                prev->next = current->next;
+            }
+            else
+            {
+                studentHead = current->next;
+            }
+            delete current;
+            cout << "\n\t------------------------------------";
+            cout << "| Student Record Deleted Successfully |";
+            cout << "\t------------------------------------\n\n";
+        }
+        else
+        {
+            cout << "\n\t------------------------------------";
+            cout << "| Student record not found|";
+            cout << "\t------------------------------------\n\n";
+        }
+    }
+
+    void searchStudentRecord(int id)
+    {
+        Student *current = studentHead;
+        while (current != nullptr && current->studentID != id)
+        {
+            current = current->next;
+        }
+
+        if (current != nullptr)
+        {
+            cout << "| ID: " << setw(3) << current->studentID << " | Name: " << setw(20) << current->name << " | GPA: " << setw(5) << fixed << setprecision(2) << current->GPA << " | Courses: ";
+
+            for (int i = 0; i < 5; ++i)
+            {
+                if (!current->courses[i].empty())
+                {
+                    cout << current->courses[i] << " , ";
+                }
+            }
+
+            cout << "\n\n";
+        }
+        else
+        {
+            cout << "\n\t------------------------------------";
+            cout << "| Student record not found|";
+            cout << "\t------------------------------------\n\n";
+        }
+    }
+
+    void enrollStudents(int studentID, const string &course)
+    {
+        Student *currentStudent = findStudentByID(studentID);
+        if (currentStudent != nullptr)
+        {
+            for (int i = 0; i < 5; ++i)
+            {
+                if (currentStudent->courses[i].empty())
+                {
+                    currentStudent->courses[i] = course;
+                    cout << "\n\t-------------------------";
+                    cout << "| Student with ID " << studentID << " enrolled in course: " << course << " |" << endl;
+                    cout << "\t-------------------------\n\n";
+                    return;
+                }
+            }
+            cout << "\nStudent is already enrolled in the maximum number of courses (5).\n";
+        }
+        else
+        {
+            cout << "\n\t-----------------------------------";
+            cout << "| Student with ID " << studentID << " not found| ";
+            cout << "\t-----------------------------------\n\n";
+        }
+    }
+
+    void AssignCourseToTeacher(int teacherID, const string &course)
+    {
+        Teacher *currentTeacher = findTeacherByID(teacherID);
+        if (currentTeacher != nullptr)
+        {
+            currentTeacher->course = course;
+            cout << "\n\t---------------------------------";
+            cout << "| Course assigned to Teacher with ID " << teacherID << ": " << course << " |" << endl;
+            cout << "\t---------------------------------\n\n";
+        }
+        else
+        {
+            cout << "\n\t---------------------------------------";
+            cout << "| Teacher with ID " << teacherID << " not found | ";
+            cout << "\t---------------------------------------\n\n";
+        }
+    }
+
+    void updateStudentGPAs(int teacherID, int studentID, float newGPA)
+    {
+        Teacher *currentTeacher = findTeacherByID(teacherID);
+        Student *currentStudent = findStudentByID(studentID);
+
+        if (currentTeacher != nullptr && currentStudent != nullptr)
+        {
+            if (currentTeacher->course == currentStudent->courses[0] ||
+                currentTeacher->course == currentStudent->courses[1] ||
+                currentTeacher->course == currentStudent->courses[2] ||
+                currentTeacher->course == currentStudent->courses[3] ||
+                currentTeacher->course == currentStudent->courses[4])
+            {
+                currentStudent->GPA = newGPA;
+                cout << "\n\t-----------------------------------";
+                cout << "| Student GPA updated by Teacher with ID " << teacherID << " |";
+                cout << "\t-----------------------------------\n\n";
+            }
+            else
+            {
+                cout << "\n\t----------------------";
+                cout << "| Teacher with ID " << teacherID << " is not assigned to teach any of the student's courses | ";
+                cout << "\t----------------------\n\n";
+            }
+        }
+        else
+        {
+            cout << "\n\t-------------------------------";
+            cout << "| Student with ID " << studentID << " not found | \n\n";
+            cout << "\t-------------------------------\n";
+        }
+    }
+
+    Student *findStudentByID(int studentID)
+    {
+        Student *current = studentHead;
+        while (current != nullptr)
+        {
+            if (current->studentID == studentID)
+                return current;
+            current = current->next;
+        }
+        return nullptr;
+    }
+
+private:
+    Teacher *findTeacherByID(int teacherID)
+    {
+        Teacher *current = teacherHead;
+        while (current != nullptr)
+        {
+            if (current->TeacherID == teacherID)
+                return current;
+            current = current->next;
+        }
+        return nullptr;
+    }
+};
+
+void displayMainMenu()
+{
+    cout << "----------------------------------------\n";
+    cout << "|        Welcome to SIS (Main Menu)     |\n";
+    cout << "----------------------------------------\n";
+    cout << "|  1. Student Records                  |\n";
+    cout << "|  2. Teacher Interaction              |\n";
+    cout << "|  3. Exit                             |\n";
+    cout << "----------------------------------------\n";
+}
+
+void displayStudentMenu()
+{
+    cout << "----------------------------------------\n";
+    cout << "|        Student Records Menu          |\n";
+    cout << "----------------------------------------\n";
+    cout << "|  1. Create Record                   |\n";
+    cout << "|  2. Display All Records             |\n";
+    cout << "|  3. Update Record                   |\n";
+    cout << "|  4. Delete Record                   |\n";
+    cout << "|  5. Search Record                   |\n";
+    cout << "|  6. Back to Main Menu               |\n";
+    cout << "----------------------------------------\n";
+}
+
+void displayTeacherMenu()
+{
+    cout << "----------------------------------------\n";
+    cout << "|     Teacher Interaction Menu         |\n";
+    cout << "----------------------------------------\n";
+    cout << "|  1. Create Teacher Record           |\n";
+    cout << "|  2. Enroll Student to Course         |\n";
+    cout << "|  3. Assign Course to Teacher         |\n";
+    cout << "|  4. Assign GPA to Student           |\n";
+    cout << "|  5. Back to Main Menu               |\n";
+    cout << "----------------------------------------\n";
+}
+
+int main()
+{
+    StudentInformationSystem sis;
+
+    int choice;
+    do
+    {
+        displayMainMenu();
+        cout << " | Enter your choice: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
+        {
+            int studentChoice;
+            do
+            {
+                displayStudentMenu();
+                cout << " | Enter your choice: ";
+                cin >> studentChoice;
+
+                switch (studentChoice)
+                {
+                case 1:
+                {
+                    int id;
+                    string name;
+                    float GPA;
+
+                    cout << "\n\t--------------------------------------";
+                    cout << "\t| Register Student |";
+                    cout << "\t--------------------------------------\n";
+                    cout << "| Enter student ID: ";
+                    cin >> id;
+
+                    if (sis.findStudentByID(id) != nullptr)
+                    {
+                        cout << "\n\t----------------------------------------\n";
+                        cout << "| Error: Student with ID " << id << " already exists.\n";
+                        cout << "\t----------------------------------------\n";
+
+                        break;
+                    }
+
+                    cout << " | Enter student name: ";
+                    cin.ignore();
+                    getline(cin, name);
+
+                    cout << " | Enter student GPA: ";
+                    cin >> GPA;
+
+                    sis.createStudentRecord(id, name, GPA);
+                    sis.saveStudentRecordsToFile("student_records.txt");
+                    break;
+                }
+                case 2:
+                    sis.displayStudentRecords();
+                    break;
+                case 3:
+                {
+                    int id;
+                    string newName;
+                    float newGPA;
+                    cout << "\n\t------------------------------------------";
+                    cout << "\t| Update Student Details |";
+                    cout << "\t------------------------------------------\n";
+                    cout << "| Enter student ID to update: ";
+                    cin >> id;
+                    cout << "| Enter new name: ";
+                    cin.ignore();
+                    getline(cin, newName);
+                    cout << "| Enter new GPA: ";
+                    cin >> newGPA;
+                    sis.updateStudentRecord(id, newName, newGPA);
+                    sis.saveStudentRecordsToFile("student_records.txt");
+                    break;
+                }
+                case 4:
+                {
+                    cout << "\n\t-----------------------------------";
+                    cout << "\t| Delete Student |";
+                    cout << "\t-----------------------------------\n";
+                    int id;
+                    cout << "| Enter student ID to delete: ";
+                    cin >> id;
+                    sis.deleteStudentRecord(id);
+                    sis.saveStudentRecordsToFile("student_records.txt");
+                    break;
+                }
+                case 5:
+                {
+                    int id;
+                    cout << "\n\t---------------------------------------";
+                    cout << "\t| Search Student |";
+                    cout << "\t---------------------------------------\n";
+                    cout << "| Enter student ID to search: ";
+                    cin >> id;
+                    sis.searchStudentRecord(id);
+                    break;
+                }
+                case 6:
+                    break;
+                default:
+                    cout << "\n\t---------------------------------------";
+                    cout << "\tInvalid choice. Please try again.";
+                    cout << "\t---------------------------------------\n";
+                }
+            } while (studentChoice != 6);
+            break;
+        }
+        case 2:
+        {
+            int teacherChoice;
+            do
+            {
+                displayTeacherMenu();
+                cout << "| Enter your choice: ";
+                cin >> teacherChoice;
+
+                switch (teacherChoice)
+                {
+                case 1:
+                {
+                    int teacherID;
+                    string teacherName;
+                    string course;
+                    cout << "\n\t---------------------------------------";
+                    cout << "\t| Register New Teacher |";
+                    cout << "\t---------------------------------------\n";
+                    cout << "| Enter teacher ID: ";
+                    cin >> teacherID;
+                    cout << "| Enter teacher name: ";
+                    cin.ignore();
+                    getline(cin, teacherName);
+                    cout << "| Enter course: ";
+                    getline(cin, course);
+                    sis.createTeacherRecord(teacherID, teacherName, course);
+                    sis.saveTeacherRecordsToFile("teacher_records.txt");
+                    break;
+                }
+                case 2:
+                {
+                    int studentID;
+                    string course;
+                    cout << "\n\t------------------------------------------";
+                    cout << "\t| Enroll Student To Course |";
+                    cout << "\t------------------------------------------\n";
+                    cout << "| Enter student ID: ";
+                    cin >> studentID;
+                    cout << "| Enter course: ";
+                    cin.ignore();
+                    getline(cin, course);
+                    sis.enrollStudents(studentID, course);
+                    sis.saveStudentRecordsToFile("student_records.txt");
+                    break;
+                }
+                case 3:
+                {
+                    int teacherID;
+                    string course;
+                    cout << "\n\t---------------------------------";
+                    cout << "\t| Assign Course To Teacher |";
+                    cout << "\t---------------------------------\n";
+                    cout << "| Enter teacher ID: ";
+                    cin >> teacherID;
+                    cout << "| Enter course: ";
+                    cin.ignore();
+                    getline(cin, course);
+                    sis.AssignCourseToTeacher(teacherID, course);
+                    break;
+                }
+                case 4:
+                {
+                    int teacherID, studentID;
+                    float newGPA;
+                    cout << "\n\t------------------------------------";
+                    cout << "\t| Update Student GPA |";
+                    cout << "\t------------------------------------\n";
+                    cout << "| Enter teacher ID: ";
+                    cin >> teacherID;
+                    cout << "| Enter student ID: ";
+                    cin >> studentID;
+                    cout << "| Enter new GPA: ";
+                    cin >> newGPA;
+                    sis.updateStudentGPAs(teacherID, studentID, newGPA);
+                    sis.saveStudentRecordsToFile("student_records.txt");
+                    break;
+                }
+                case 5:
+                    break;
+                default:
+                    cout << "\n\t---------------------------------------";
+                    cout << "\tInvalid choice. Please try again.";
+                    cout << "\t--------------------------------------\n";
+                }
+            } while (teacherChoice != 5);
+            break;
+        }
+        case 3:
+            cout << "\n\n";
+            cout << "-------------------------------------------\n";
+            cout << "| Thank you for using SIS CLI Application |\n";
+            cout << "-------------------------------------------\n";
+            cout << "| Developed & Designed by                 |\n";
+            cout << "| Ahmed  Saleem Khan                      |\n";
+            cout << "| Abdullah Malik                          |\n";
+            cout << "| Wasiullah Khan                          |\n";
+            cout << "-------------------------------------------\n\t\tGoodbye!\n";
+
+            return 0;
+            break;
+        default:
+            cout << "\n\t---------------------------------------";
+            cout << "\tInvalid choice. Please try again.";
+            cout << "\t---------------------------------------\n";
+        }
+    } while (choice != 3);
+
+    return 0;
+}
